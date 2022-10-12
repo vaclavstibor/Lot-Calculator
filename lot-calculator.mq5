@@ -11,8 +11,8 @@
 #property description " - capital"
 #property description " - risk percentage"
 
-double input OrderOpenPrice = 7510.3;        // Otevírací cena
-double input OrderStopLossPrice = 7537.15;    // Stop loss cena
+double input OrderOpenPrice;        // Otevírací cena
+double input OrderStopLossPrice;    // Stop loss cena
 double input Capital = 300000;      // Kapitál
 double input RiskPercentage = 0.3;  // Risk
 //+------------------------------------------------------------------+
