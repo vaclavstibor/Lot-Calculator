@@ -15,16 +15,16 @@ double input OrderOpenPrice;        // Otevírací cena
 double input OrderStopLossPrice;    // Stop loss cena
 double input Capital = 300000;      // Kapitál
 double input RiskPercentage = 0.3;  // Risk
+
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
   {
-//---
    double OrderLotSize = DeltaLotCalc();
 
    Print("(",_Symbol,") Lot value: ", DoubleToString(OrderLotSize, 2));
-//---
+
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
@@ -32,24 +32,12 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
   {
-//---
-
   }
-//+------------------------------------------------------------------+
-//| Expert tick function                                             |
-//+------------------------------------------------------------------+
-void OnTick()
-  {
-//---
-
-  }
-//+------------------------------------------------------------------+
 
 //- Lot calculator for panding orders
 // [Params] StopLoss is size of zone range. OrderOpenPrice is price. OrderStopLoss is price.
 double DeltaLotCalc()
   {
-
 //--
    double TickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
    double TickSize  = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
@@ -60,20 +48,22 @@ double DeltaLotCalc()
 // Non-FX instrument must be checked via same currency as user acc
    double DeltaPerLot = TickValue / TickSize;
 
-   double OrderLots = Risk / (MathAbs(NormalizeDouble(OrderOpenPrice,_Digits) - NormalizeDouble(OrderStopLossPrice,_Digits)) * DeltaPerLot /* + CommissionPerLot*/);
+   double OrderLots = Risk / ((MathAbs(OrderOpenPrice - OrderStopLossPrice) / (10 * _Point)) * DeltaPerLot /* + CommissionPerLot*/);
 
    return NormalizeLots(OrderLots);
   }
 
-//- Lot size normalizer, for round (floating point) numbers
+//- Lot size normalizer, round (floating point) numbers
 // [Params] Lots is size of order.
 double NormalizeLots(double Lots)
   {
+//--
    double LotsMinimum = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
    double LotsMaximum = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
    double LotsStep    = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+//--
 
 // Prevent too greater volume. Prevent too smaller volume. Align to Step value
    return fmin(LotsMaximum, fmax(LotsMinimum, round(Lots / LotsStep) * LotsStep));
-  }  
+  }
 //+------------------------------------------------------------------+
