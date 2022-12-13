@@ -1,94 +1,106 @@
 //+------------------------------------------------------------------+
 //|                                                   Lot Calculator |
 //|                                    Copyright 2022, Václav Stibor |
-//|                                                          git-url |
+//|                   https://github.com/vaclavstibor/lot-calculator |
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2022, Václav Stibor"
-#property link "git-url"
+#property link "https://github.com/vaclavstibor/lot-calculator"
 #property version "2.00"
 #property strict
 
 // Define input variables
 string input s0 = "Symbol:";
-string input Symbol = "EURUSD";
+string input Symbol;                   // Input format: EURUSD
 string input s1 = "Open price:";
-double input OpenPrice = 1.0541;
+double input OpenPrice;                // Input format: 1.54321
 string input s2 = "Stop loss price:";
-double input StopLossPrice = 1.0541;
+double input StopLossPrice;            // Input format: 1.54221
 string input s3 = "Account balance:";
-double input AccountBalance = 5000;
+double input AccountBalance;           // Input format: 5000
 string input s4 = "Risk percentage:";
-double input RiskPercentage = 4;
+double input RiskPercentage;           // Input format: 1
+
+// Define global variables
+double LotsStep = SymbolInfoDouble(Symbol, SYMBOL_VOLUME_STEP);
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 void OnInit()
-  {
-   Print("(",Symbol,") Lot value: ", DoubleToString(LotCalculation(), 2));
-  }
+    {
+        Print("(",Symbol,") Lot value: ", DoubleToString(LotsCalculation(), 2));
+    }
 
 //+------------------------------------------------------------------+
-//|                                                                  |
+//| Get lot value depends on risk amount and stop loss               |
 //+------------------------------------------------------------------+
-double LotCalculation()
-  {
-   double lots;
+double LotsCalculation()
+    {
+        // Function return variable
+        double lots;
 
-   double tickSize  = SymbolInfoDouble(Symbol, SYMBOL_TRADE_TICK_SIZE);
-   double tickValue = SymbolInfoDouble(Symbol, SYMBOL_TRADE_TICK_VALUE);
-   double lotStep   = SymbolInfoDouble(Symbol, SYMBOL_VOLUME_STEP);
+        // The smallest value of price change of current symbol
+        double tickSize  = SymbolInfoDouble(Symbol, SYMBOL_TRADE_TICK_SIZE);
+        // Whenever price change by tick size then profit chaged by tick value
+        double tickValue = SymbolInfoDouble(Symbol, SYMBOL_TRADE_TICK_VALUE);
 
-   double riskAmount   = AccountBalance * RiskPercentage / 100;
-   double riskDistance = GetDistance();
+        // TODO check symbol and account currency. Is it really necessary?
 
-   if(tickSize == 0 || tickValue == 0 || lotStep == 0)
-     {
-      Print("ERROR: Get data from server failed.");
-      return 0;
-     }
+        // How much want user risk (e.g. 900 $)
+        double riskAmount   = AccountBalance * RiskPercentage / 100;
+        // Compute stop loss price distance from open price
+        double riskDistance = GetDistance();
 
-   double lotStepAmount = (riskDistance / tickSize) * tickValue * lotStep;
+        if(tickSize == 0 || tickValue == 0 || LotsStep == 0)
+        {
+            Print("ERROR: Get data from server failed. (0)");
+            return 0;
+        }
 
-   if(lotStepAmount == 0)
-     {
-      Print("ERROR: Lot step amount calculation.");
-     }
+        // Risk amount for the smallest lots step
+        double lotStepAmount = (riskDistance / tickSize) * tickValue * LotsStep;
 
-   lots = MathFloor(riskAmount / lotStepAmount) * lotStep;
+        if(lotStepAmount == 0)
+        {
+            Print("ERROR: Lot step amount calculation. (0)");
+        }
 
-   return NormalizeLots(lots);
-  }
+        lots = MathFloor(riskAmount / lotStepAmount) * LotsStep;
+
+        return NormalizeLots(lots);
+    }
 
 //+------------------------------------------------------------------+
-//|                                                                  |
+//| Get distance between stop loss and open price                    |
 //+------------------------------------------------------------------+
 double GetDistance()
-  {
-   double distance;
+    {
+        // Function return variable
+        double distance;
 
-   int digits = SymbolInfoInteger(Symbol, SYMBOL_DIGITS);
+        // Get digits of symbol that user want
+        int digits = SymbolInfoInteger(Symbol, SYMBOL_DIGITS);
 
-   double NormalizedOpenPrice = NormalizeDouble(OpenPrice, digits);
-   double NormalizedStopLossPrice = NormalizeDouble(StopLossPrice, digits);
+        // Normalize prices to be compatible with symbol digits
+        double NormalizedOpenPrice = NormalizeDouble(OpenPrice, digits);
+        double NormalizedStopLossPrice = NormalizeDouble(StopLossPrice, digits);
 
-   distance = MathAbs(NormalizedOpenPrice - NormalizedStopLossPrice);
-//Print("GetDistance(): distance is " + distance);
+        distance = MathAbs(NormalizedOpenPrice - NormalizedStopLossPrice);
+        //Print("GetDistance(): distance is " + distance);
 
-   return distance;
-  }
+        return distance;
+    }
 
-//- Lot size normalizer, round (floating point) numbers
-// [Params] Lots is size of order.
+//+------------------------------------------------------------------+
+//| Lot size normalizer, round (floating point) numbers.             |
+//| [Params] Lots is size of order.                                  |
+//+------------------------------------------------------------------+
 double NormalizeLots(double Lots)
-  {
-//--
-   double LotsMinimum = SymbolInfoDouble(Symbol, SYMBOL_VOLUME_MIN);
-   double LotsMaximum = SymbolInfoDouble(Symbol, SYMBOL_VOLUME_MAX);
-   double LotsStep    = SymbolInfoDouble(Symbol, SYMBOL_VOLUME_STEP);
-//--
+    {
+        double LotsMinimum = SymbolInfoDouble(Symbol, SYMBOL_VOLUME_MIN);
+        double LotsMaximum = SymbolInfoDouble(Symbol, SYMBOL_VOLUME_MAX);
 
-// Prevent too greater volume. Prevent too smaller volume. Align to Step value
-   return fmin(LotsMaximum, fmax(LotsMinimum, round(Lots / LotsStep) * LotsStep));
+        // Prevent too greater volume. Prevent too smaller volume. Align to Step value
+        return fmin(LotsMaximum, fmax(LotsMinimum, round(Lots / LotsStep) * LotsStep));
   }
 //+------------------------------------------------------------------+
