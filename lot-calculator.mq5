@@ -10,15 +10,15 @@
 
 // Define input variables
 string input s0 = "Symbol:";
-string input Symbol;                   // Input format: EURUSD
+string input Symbol = "EURUSD";            // Input format: EURUSD
 string input s1 = "Open price:";
-double input OpenPrice;                // Input format: 1.54321
+double input OpenPrice = "1.06168";        // Input format: 1.54321
 string input s2 = "Stop loss price:";
-double input StopLossPrice;            // Input format: 1.54221
+double input StopLossPrice = "1.06068";    // Input format: 1.54221
 string input s3 = "Account equity:";
-double input AccountEquity;            // Input format: 5000
+double input AccountEquity = 5000;         // Input format: 5000
 string input s4 = "Risk percentage:";
-double input RiskPercentage;           // Input format: 1
+double input RiskPercentage = 1;           // Input format: 1
 
 // Define global variables
 double LotsStep = SymbolInfoDouble(Symbol, SYMBOL_VOLUME_STEP);
