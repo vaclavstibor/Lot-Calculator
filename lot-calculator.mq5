@@ -15,8 +15,8 @@ string input s1 = "Open price:";
 double input OpenPrice;                // Input format: 1.54321
 string input s2 = "Stop loss price:";
 double input StopLossPrice;            // Input format: 1.54221
-string input s3 = "Account balance:";
-double input AccountBalance;           // Input format: 5000
+string input s3 = "Account equity:";
+double input AccountEquity;            // Input format: 5000
 string input s4 = "Risk percentage:";
 double input RiskPercentage;           // Input format: 1
 
@@ -44,16 +44,14 @@ double LotsCalculation()
         // Whenever price change by tick size then profit chaged by tick value
         double tickValue = SymbolInfoDouble(Symbol, SYMBOL_TRADE_TICK_VALUE);
 
-        // TODO check symbol and account currency. Is it really necessary?
-
         // How much want user risk (e.g. 900 $)
-        double riskAmount   = AccountBalance * RiskPercentage / 100;
+        double riskAmount   = AccountEquity * RiskPercentage / 100;
         // Compute stop loss price distance from open price
         double riskDistance = GetDistance();
 
         if(tickSize == 0 || tickValue == 0 || LotsStep == 0)
         {
-            Print("ERROR: Get data from server failed. (0)");
+            Print("ERROR: Get data from broker's server failed. (0)");
             return 0;
         }
 
